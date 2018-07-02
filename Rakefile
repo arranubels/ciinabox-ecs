@@ -384,7 +384,7 @@ namespace :ciinabox do
     start_stop_env(command, config)
   end
 
-  desc('Cleans the environment')
+  desc('Cleans the environment by deleting the stack. (Careful is tear_down)')
   task :clean => :tear_down
 
   desc('Deletes/tears down the ciinabox environment')
