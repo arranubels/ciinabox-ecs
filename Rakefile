@@ -384,22 +384,36 @@ namespace :ciinabox do
     start_stop_env(command, config)
   end
 
+  desc('Cleans the environment')
+  task :clean => :tear_down
+
   desc('Deletes/tears down the ciinabox environment')
   task :tear_down do
     check_active_ciinabox(config)
-    STDOUT.puts "Are you sure you want to tear down the #{config['ciinabox_name']} ciinabox? (y/n)"
-    input = STDIN.gets.strip
-    if input == 'y'
-      status, result = aws_execute(config, ['cloudformation', 'delete-stack', "--stack-name #{stack_name}"])
-      puts result
-      if status != 0
-        puts "fail to tear down ciinabox environment"
-        exit status
-      else
-        puts "Starting tear down of ciinabox environment"
-      end
+    status, result = aws_execute(config, ['cloudformation', 'describe-stacks', "--stack-name #{stack_name}", '--query "Stacks[0].StackStatus"', '--out text'])
+    if status != 0
+      puts "fail to get status for #{config['ciinabox_name']}"
+      exit 1
+    end
+    output = result.chop!
+    if output == 'ROLLBACK_COMPLETE'
+      puts "Environment is down, clearing."
     else
-      puts "good choice...keep enjoying your ciinabox"
+      STDOUT.puts "The environment is currently active; are you sure you want to tear down the #{config['ciinabox_name']} ciinabox? (y/n)"
+      input = STDIN.gets.strip
+      if input != 'y'
+        puts "good choice...keep enjoying your ciinabox"
+        exit 1
+      end
+    end
+
+    status, result = aws_execute(config, ['cloudformation', 'delete-stack', "--stack-name #{stack_name}"])
+    puts result
+    if status != 0
+      puts "fail to tear down ciinabox environment"
+      exit status
+    else
+      puts "Starting tear down of ciinabox environment"
     end
   end
 
