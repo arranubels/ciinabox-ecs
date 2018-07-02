@@ -231,6 +231,28 @@ namespace :ciinabox do
     end
   end
 
+  desc('Cleans up stacks left over')
+  task :clean do
+    last_status = ""
+    check_active_ciinabox(config)
+    status, result = aws_execute(config, ['cloudformation', 'describe-stacks', "--stack-name #{stack_name}", '--query "Stacks[0].StackStatus"', '--out text'])
+    if status != 0
+      puts "fail to get status for #{config['ciinabox_name']}...has it been created?"
+      exit 1
+    end
+    output = result.chop!
+    next if last_status == output
+    if output == 'CREATE_COMPLETE'
+      puts "#{config['ciinabox_name']} Please rollback before cleaning."
+      exit 1
+    elsif output == 'ROLLBACK_COMPLETE'
+      status = aws_execute(config, ['cloudformation', 'delete-stack', "--stack-name #{stack_name}"])
+    else
+      puts "#{config['ciinabox_name']} unsupported ciinabox state: #{output}"
+      exit 1
+    end
+  end
+
   desc('Create self-signed SSL certs for use with ciinabox')
   task :create_server_cert do
     check_active_ciinabox(config)

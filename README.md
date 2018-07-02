@@ -34,6 +34,7 @@ Valid actions:
 name                 |description         
 
 active               |Switch active ciinabox
+clean                |Deletes the existing stack if in the correct state
 create               |Creates the ciinabox environment
 create_server_cert   |Create self-signed SSL certs for use with ciinabox
 create_source_bucket |Creates the source bucket for deploying ciinabox
